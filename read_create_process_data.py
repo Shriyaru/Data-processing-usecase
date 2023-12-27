@@ -1,4 +1,4 @@
-#read the csv file and split the data into multiple json files where 10-100 no of records per file of 5000 filess
+#read the csv file and split the data into multiple json files where 10-100 no of records per file of 5000 records
 import pandas as pd
 from datetime import datetime
 import numpy as np
@@ -49,6 +49,7 @@ def process_json_files(output_dir):
     combined_json_df = pd.concat(combined_dfs, ignore_index=True)
     # print('combined_json_df',combined_json_df)
 
+
     #getting total no of records processed
     total_number_of_records = len(combined_json_df)
 
@@ -73,9 +74,8 @@ def process_json_files(output_dir):
 
     # Calculate the average flight duration for the top 10 destinations
     average_flight_duration_top_10 = top_10_df['hours'].mean()
+    # Calculate the p95 flight duration for the top 10 destinations
     p95_flight_duration_top_10 = np.percentile(top_10_df['hours'].fillna(0), 95)
-
-
 
     return {
         'total_number_of_records' : total_number_of_records,
@@ -91,28 +91,35 @@ if __name__ == "__main__":
     start_time = time.time()
 
     source_data = pd.read_csv("flight_data.csv")
-    source_data['departure_datetime'] = pd.to_datetime(source_data['departure_date_time'], format="%Y-%m-%d %H:%M")
-    source_data['arrival_datetime'] = pd.to_datetime(source_data['arrival_date_time'], format="%Y-%m-%d %H:%M")
-    source_data['difference'] = source_data['arrival_datetime'] - source_data['departure_datetime']
-    source_data['total_minutes'] = source_data['difference'].dt.total_seconds() / 60
+    source_data_len = len(source_data)
+    source_cleaned_data = source_data.dropna(subset=['date'])
+    dropped_null_row_count = source_data_len - source_cleaned_data.shape[0]
+    source_cleaned_data['departure_datetime'] = pd.to_datetime(source_cleaned_data['departure_date_time'], format="%Y-%m-%d %H:%M")
+    source_cleaned_data['arrival_datetime'] = pd.to_datetime(source_cleaned_data['arrival_date_time'], format="%Y-%m-%d %H:%M")
+    source_cleaned_data['difference'] = source_cleaned_data['arrival_datetime'] - source_cleaned_data['departure_datetime']
+    source_cleaned_data['total_minutes'] = source_cleaned_data['difference'].dt.total_seconds() / 60
 
     # Calculating the hours and minutes on the basis of the datetime difference calculated
-    source_data['hours'] = source_data['difference'].dt.components['hours']
-    source_data['minutes'] = source_data['difference'].dt.components['minutes']
+    source_cleaned_data['hours'] = source_cleaned_data['difference'].dt.components['hours']
+    source_cleaned_data['minutes'] = source_cleaned_data['difference'].dt.components['minutes']
 
     # Create a new column 'time_combined' to combine hours and minutes
-    source_data['time_combined'] = source_data.apply(concat_hours_minutes, axis=1)
-
+    source_cleaned_data['time_combined'] = source_cleaned_data.apply(concat_hours_minutes, axis=1)
     # dropping the columns from the json file as it is not needed
-    source_data.drop(columns=['difference', 'arrival_datetime', 'departure_datetime', 'date'], inplace=True)
+    source_cleaned_data.drop(columns=['difference', 'arrival_datetime', 'departure_datetime', 'date'], inplace=True)
     output_dir = 'tmp/flights/'
-    create_json_files(source_data,output_dir)
+    #function to process the csv file and create the json files in the folders
+    create_json_files(source_cleaned_data,output_dir)
+    #function to clean and analyse the data
     result = process_json_files(output_dir)
     endtime = time.time()
     total_duration_to_process = endtime - start_time
 
-    print(f"Total no of records - {result['total_number_of_records']}")
-    print(f"Total number of Null records - {result['total_null_records_count']}")
+
+    print(f"Total no of records from source- {source_data_len}")
+    print(f"Total no of records processed after cleaning- {result['total_number_of_records']}")
+    print(f"Total number of Null records row column - {result['total_null_records_count']}")
+    print(f"Total dropped Null rows which has no arrival_date and departure_date - {dropped_null_row_count}")
     print(f"Total Time taken to process the data -  {total_duration_to_process}")
     print(f"Average of Flight duration for top 10 destinations - {result['average_flight_duration_top_10']}")
     print(f"95th percentile of Flight duration for top 10 destinations - {result['p95_flight_duration_top_10']}")
