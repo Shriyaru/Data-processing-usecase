@@ -70,7 +70,7 @@ def process_all_json_files_parallel(json_folder):
 
     # Concatenate DataFrames obtained from each JSON file
     json_dataframe = pd.concat(dfs, ignore_index=True)
-
+    executor.shutdown()
     #converting the total_minutes column to int
     json_dataframe['total_minutes'] = json_dataframe['total_minutes'].astype(int)
 
