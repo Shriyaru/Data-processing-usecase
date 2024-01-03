@@ -15,7 +15,7 @@ Program should process those files and produce the following result:
 For the above use case I have followed the below steps:
 #1 Generation phase:
 1.  Generated the fake data using faker library by considering the Null values and other things, for have stored the data in .csv file as in local pc was not able to generate more data the pc was crashing, whereas did not use Azure Cloud as it was all client tenants.
-2.  Read the csv file and created the 1200 plus json files by grouping the data on year, month and city. Stored the json file in the given path.
+2.  Read the csv file and created the 1200 plus json files by grouping the data on year, month and city. Stored the json file in the given path ie. tmp/flights .
 3.  To read the json file and process the same have used ThreadPoolExecutor, for paralleling processing all the json files at a time.
 Flight data to be processed and split the data into multiple json files, and process the json files, for cleaning and analysis phase.
 
