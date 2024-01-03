@@ -11,6 +11,7 @@ Program should process those files and produce the following result:
 -          AVG and P95 (95th percentile) of flight duration for Top 10 destinations. 
 -          Assuming cities had originally 0 passengers, find two cities with MAX passengers arrived and left. 
 
+Note : The date has to be passed in UTC format.
 
 For the above use case I have followed the below steps:
 #1 Generation phase:
